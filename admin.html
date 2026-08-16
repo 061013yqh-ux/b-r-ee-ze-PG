@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>后台管理</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17213a}
+.wrap{max-width:760px;margin:0 auto;padding:28px 16px}
+.card{background:#fff;border-radius:20px;padding:24px;box-shadow:0 6px 24px #00000012;margin-bottom:16px}
+h1{margin:0 0 24px;font-size:30px}
+label{display:block;margin:0 0 8px;color:#68758c;font-size:14px}
+input,button{width:100%;padding:14px 15px;border:1px solid #d8deea;border-radius:12px;font:inherit}
+button{margin-top:12px;background:#2563eb;color:#fff;border:0;font-weight:700}
+button:disabled{opacity:.65}
+#msg{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+.err{display:block!important;background:#fff0f0;color:#c62828}
+.ok{display:block!important;background:#edf9ef;color:#287a35}
+.info{display:block!important;background:#eef5ff;color:#2457a6}
+.hide{display:none!important}
+.item{padding:12px 0;border-bottom:1px solid #edf0f5}
+.small{font-size:13px;color:#7b8799}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section id="loginCard" class="card">
+    <h1>后台管理</h1>
+    <label for="password">管理密码</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="请输入 ADMIN_PASSWORD">
+    <button id="loginButton" type="button">登录</button>
+    <div id="msg"></div>
+  </section>
+
+  <section id="app" class="card hide">
+    <h1>后台已登录</h1>
+    <div id="data"></div>
+    <button id="logout" type="button">退出登录</button>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var token = "";
+
+  function $(id){ return document.getElementById(id); }
+
+  function message(text, type){
+    var el = $("msg");
+    el.textContent = text;
+    el.className = type || "info";
+    el.style.display = "block";
+  }
+
+  async function request(){
+    var response = await fetch("/api/data?_=" + Date.now(), {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Authorization": "Bearer " + token,
+        "Accept": "application/json"
+      }
+    });
+
+    var text = await response.text();
+    var data = {};
+    try { data = text ? JSON.parse(text) : {}; }
+    catch(e) { throw new Error("服务器返回异常，HTTP " + response.status + "：\n" + text.slice(0,300)); }
+
+    if(!response.ok) throw new Error(data.error || ("请求失败，HTTP " + response.status));
+    return data;
+  }
+
+  function showData(data){
+    $("data").innerHTML =
+      "<p class='small'>API 连接正常，后台登录成功。</p>" +
+      "<p>网站设置：" + Object.keys(data.settings || {}).length + " 项</p>" +
+      "<p>Banner：" + (data.banners || []).length + " 个</p>" +
+      "<p>导航卡片：" + (data.platforms || []).length + " 个</p>";
+  }
+
+  async function login(){
+    var password = $("password").value;
+
+    if(!password){
+      message("请输入管理密码。", "err");
+      return;
+    }
+
+    var button = $("loginButton");
+    button.disabled = true;
+    button.textContent = "正在连接后台…";
+    message("正在连接 /api/data …", "info");
+
+    token = password;
+
+    try{
+      var data = await request();
+      showData(data);
+      $("loginCard").classList.add("hide");
+      $("app").classList.remove("hide");
+    }catch(error){
+      token = "";
+      message(error && error.message ? error.message : String(error), "err");
+    }finally{
+      button.disabled = false;
+      button.textContent = "登录";
+    }
+  }
+
+  $("loginButton").addEventListener("click", login);
+  $("password").addEventListener("keydown", function(e){
+    if(e.key === "Enter") login();
+  });
+
+  window.addEventListener("error", function(e){
+    message("页面脚本错误：" + e.message, "err");
+  });
+
+  window.addEventListener("unhandledrejection", function(e){
+    message("后台请求异常：" + (e.reason && e.reason.message ? e.reason.message : e.reason), "err");
+  });
+
+  $("logout").addEventListener("click", function(){
+    token = "";
+    $("app").classList.add("hide");
+    $("loginCard").classList.remove("hide");
+    $("password").value = "";
+    $("msg").style.display = "none";
+  });
+})();
+</script>
+</body>
+</html>
