@@ -1,1 +1,103 @@
-async function init(env){await env.DB.prepare("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)").run();await env.DB.prepare("CREATE TABLE IF NOT EXISTS banners(id INTEGER PRIMARY KEY AUTOINCREMENT,image_url TEXT NOT NULL,link_url TEXT NOT NULL,sort INTEGER DEFAULT 0)").run();await env.DB.prepare("CREATE TABLE IF NOT EXISTS platforms(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,logo_url TEXT,description TEXT,link_url TEXT NOT NULL,tag TEXT,sort INTEGER DEFAULT 0)").run()}function j(x,s=200){return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json;charset=utf-8","cache-control":"no-store"}})}function ok(r,e){return r.headers.get("Authorization")==="Bearer "+e.ADMIN_PASSWORD}async function all(e){let[s,b,p]=await Promise.all([e.DB.prepare("SELECT key,value FROM settings").all(),e.DB.prepare("SELECT * FROM banners ORDER BY sort,id DESC").all(),e.DB.prepare("SELECT * FROM platforms ORDER BY sort,id DESC").all()]);let settings={};for(let x of s.results)settings[x.key]=x.value;return{settings,banners:b.results,platforms:p.results}}export async function onRequestGet({request,env}){await init(env);if(new URL(request.url).pathname.endsWith("/admin")&&!ok(request,env))return j({error:"未授权"},401);return j(await all(env))}export async function onRequestPost({request,env}){await init(env);if(!ok(request,env))return j({error:"未授权"},401);let b=await request.json(),d=b.data||{},id=Number(b.id),q=env.DB;if(b.action==="settings")for(let[k,v]of Object.entries(d))await q.prepare("INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(k,String(v)).run();else if(b.action==="banner_add")await q.prepare("INSERT INTO banners(image_url,link_url) VALUES(?,?)").bind(d.image_url,d.link_url).run();else if(b.action==="banner_delete")await q.prepare("DELETE FROM banners WHERE id=?").bind(id).run();else if(b.action==="platform_add")await q.prepare("INSERT INTO platforms(name,logo_url,description,link_url,tag,sort) VALUES(?,?,?,?,?,?)").bind(d.name,d.logo_url||"",d.description||"",d.link_url,d.tag||"",Number(d.sort)||0).run();else if(b.action==="platform_update")await q.prepare("UPDATE platforms SET name=?,logo_url=?,description=?,link_url=?,tag=?,sort=? WHERE id=?").bind(d.name,d.logo_url||"",d.description||"",d.link_url,d.tag||"",Number(d.sort)||0,id).run();else if(b.action==="platform_delete")await q.prepare("DELETE FROM platforms WHERE id=?").bind(id).run();else return j({error:"未知操作"},400);return j({ok:true})}
+async function init(env) {
+  if (!env.DB) throw new Error("D1 binding DB 未配置");
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS banners(id INTEGER PRIMARY KEY AUTOINCREMENT,image_url TEXT NOT NULL,link_url TEXT NOT NULL,sort INTEGER DEFAULT 0)").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS platforms(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,logo_url TEXT,description TEXT,link_url TEXT NOT NULL,tag TEXT,sort INTEGER DEFAULT 0)").run();
+}
+
+function j(x, s=200) {
+  return new Response(JSON.stringify(x), {
+    status:s,
+    headers:{
+      "content-type":"application/json;charset=utf-8",
+      "cache-control":"no-store"
+    }
+  });
+}
+
+function authorized(request, env) {
+  const expected = env.ADMIN_PASSWORD;
+  if (!expected) return false;
+  const auth = request.headers.get("Authorization") || "";
+  return auth === "Bearer " + expected;
+}
+
+function authError(env) {
+  if (!env.ADMIN_PASSWORD) {
+    return j({error:"Cloudflare 未配置 ADMIN_PASSWORD"},500);
+  }
+  return j({error:"密码错误"},401);
+}
+
+async function all(env) {
+  const [s,b,p] = await Promise.all([
+    env.DB.prepare("SELECT key,value FROM settings").all(),
+    env.DB.prepare("SELECT * FROM banners ORDER BY sort,id DESC").all(),
+    env.DB.prepare("SELECT * FROM platforms ORDER BY sort,id DESC").all()
+  ]);
+
+  const settings={};
+  for (const x of s.results) settings[x.key]=x.value;
+
+  return {
+    settings,
+    banners:b.results,
+    platforms:p.results
+  };
+}
+
+export async function onRequestGet({request,env}) {
+  try {
+    if (!authorized(request,env)) return authError(env);
+    await init(env);
+    return j(await all(env));
+  } catch (e) {
+    return j({error:e?.message||"服务器错误"},500);
+  }
+}
+
+export async function onRequestPost({request,env}) {
+  try {
+    if (!authorized(request,env)) return authError(env);
+    await init(env);
+
+    const body=await request.json();
+    const d=body.data||{};
+    const id=Number(body.id);
+    const q=env.DB;
+
+    if(body.action==="settings") {
+      for(const [k,v] of Object.entries(d)) {
+        await q.prepare(
+          "INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+        ).bind(k,String(v)).run();
+      }
+    } else if(body.action==="banner_add") {
+      await q.prepare(
+        "INSERT INTO banners(image_url,link_url) VALUES(?,?)"
+      ).bind(d.image_url,d.link_url).run();
+    } else if(body.action==="banner_delete") {
+      await q.prepare("DELETE FROM banners WHERE id=?").bind(id).run();
+    } else if(body.action==="platform_add") {
+      await q.prepare(
+        "INSERT INTO platforms(name,logo_url,description,link_url,tag,sort) VALUES(?,?,?,?,?,?)"
+      ).bind(
+        d.name,d.logo_url||"",d.description||"",d.link_url,d.tag||"",Number(d.sort)||0
+      ).run();
+    } else if(body.action==="platform_update") {
+      await q.prepare(
+        "UPDATE platforms SET name=?,logo_url=?,description=?,link_url=?,tag=?,sort=? WHERE id=?"
+      ).bind(
+        d.name,d.logo_url||"",d.description||"",d.link_url,d.tag||"",Number(d.sort)||0,id
+      ).run();
+    } else if(body.action==="platform_delete") {
+      await q.prepare("DELETE FROM platforms WHERE id=?").bind(id).run();
+    } else {
+      return j({error:"未知操作"},400);
+    }
+
+    return j({ok:true});
+  } catch(e) {
+    return j({error:e?.message||"服务器错误"},500);
+  }
+}
