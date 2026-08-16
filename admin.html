@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>后台管理</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17213a}
+.wrap{max-width:900px;margin:auto;padding:16px}
+.box{background:#fff;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 4px 18px #0001}
+h1,h2{margin-top:0}
+input,textarea,button{width:100%;padding:11px;border:1px solid #dce2ec;border-radius:10px;font:inherit}
+textarea{min-height:70px}
+label{display:block;margin:10px 0 5px;color:#68758c;font-size:13px}
+button{background:#1769e8;color:#fff;border:0;font-weight:700;cursor:pointer}
+button:disabled{opacity:.6}
+.danger{background:#e74c3c}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.item{border:1px solid #e5e9f0;border-radius:12px;padding:10px;margin:8px 0}
+.item img{width:52px;height:52px;object-fit:cover;border-radius:10px;vertical-align:middle}
+.actions{display:flex;gap:8px;margin-top:8px}
+.actions button{width:auto;flex:1}
+.hide{display:none}
+.msg{margin-top:10px;padding:10px;border-radius:10px;background:#fff3f3;color:#c0392b;display:none}
+.ok{background:#eefaf0;color:#287a35}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<div id="login" class="box">
+  <h1>后台管理</h1>
+  <label for="pw">管理密码</label>
+  <input id="pw" type="password" autocomplete="current-password" placeholder="请输入管理密码">
+  <button id="loginBtn" style="margin-top:10px" onclick="login()">登录</button>
+  <div id="loginMsg" class="msg"></div>
+</div>
+
+<div id="app" class="hide">
+
+<div class="box">
+  <h1>网站设置</h1>
+  <div class="row">
+    <div><label>网站标题</label><input id="title"></div>
+    <div><label>栏目标题</label><input id="section"></div>
+  </div>
+  <label>客服链接</label>
+  <input id="service">
+  <button style="margin-top:10px" onclick="settings()">保存设置</button>
+</div>
+
+<div class="box">
+  <h2>Banner</h2>
+  <div id="banners"></div>
+  <label>图片地址</label><input id="bi">
+  <label>跳转链接</label><input id="bl">
+  <button style="margin-top:10px" onclick="addBanner()">新增 Banner</button>
+</div>
+
+<div class="box">
+  <h2>导航卡片</h2>
+  <div id="list"></div>
+  <label>名称</label><input id="name">
+  <label>Logo 图片地址</label><input id="logo">
+  <label>简介</label><textarea id="desc"></textarea>
+  <label>访问链接</label><input id="link">
+  <div class="row">
+    <div><label>标签</label><input id="tag" placeholder="官方/推荐"></div>
+    <div><label>排序</label><input id="sort" type="number" value="0"></div>
+  </div>
+  <button style="margin-top:10px" onclick="save()">新增卡片</button>
+</div>
+
+</div>
+</main>
+
+<script>
+let token='',editId=null;
+const $=x=>document.getElementById(x);
+
+function showLoginMsg(text,ok=false){
+  const el=$('loginMsg');
+  el.textContent=text;
+  el.className='msg'+(ok?' ok':'');
+  el.style.display='block';
+}
+
+async function api(options={}){
+  const headers={...(options.headers||{}),Authorization:'Bearer '+token};
+  if(options.body!==undefined) headers['Content-Type']='application/json';
+  const r=await fetch('/api/data',{...options,headers});
+  const text=await r.text();
+  let d;
+  try{d=text?JSON.parse(text):{}}
+  catch(e){throw Error('服务器返回了无效响应（HTTP '+r.status+'）')}
+  if(!r.ok) throw Error(d.error||('请求失败（HTTP '+r.status+'）'));
+  return d;
+}
+
+async function login(){
+  const pw=$('pw').value;
+  if(!pw){showLoginMsg('请输入管理密码');return}
+  const btn=$('loginBtn');
+  btn.disabled=true;
+  btn.textContent='登录中...';
+  token=pw;
+  try{
+    const d=await api({method:'GET'});
+    $('login').classList.add('hide');
+    $('app').classList.remove('hide');
+    render(d);
+  }catch(e){
+    token='';
+    showLoginMsg(e.message);
+  }finally{
+    btn.disabled=false;
+    btn.textContent='登录';
+  }
+}
+
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+
+function esc(v){
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function render(d){
+  $('title').value=d.settings?.title||'';
+  $('section').value=d.settings?.sectionTitle||'';
+  $('service').value=d.settings?.service_url||'';
+
+  $('banners').innerHTML=(d.banners||[]).map(b=>
+    '<div class="item"><img src="'+esc(b.image_url)+'"> '+esc(b.link_url)+
+    ' <button class="danger" onclick="delB('+Number(b.id)+')">删除</button></div>'
+  ).join('')||'<div style="color:#68758c">暂无 Banner</div>';
+
+  $('list').innerHTML=(d.platforms||[]).map(p=>
+    '<div class="item"><img src="'+esc(p.logo_url||'')+'"> <b>'+esc(p.name)+'</b>'+
+    '<div>'+esc(p.link_url)+'</div><div class="actions">'+
+    '<button onclick="edit('+Number(p.id)+')">编辑</button>'+
+    '<button class="danger" onclick="delP('+Number(p.id)+')">删除</button></div></div>'
+  ).join('')||'<div style="color:#68758c">暂无导航卡片</div>';
+}
+
+async function settings(){
+  await api({method:'POST',body:JSON.stringify({
+    action:'settings',
+    data:{title:$('title').value,sectionTitle:$('section').value,service_url:$('service').value}
+  })});
+  alert('已保存');
+}
+
+async function addBanner(){
+  await api({method:'POST',body:JSON.stringify({
+    action:'banner_add',
+    data:{image_url:$('bi').value,link_url:$('bl').value}
+  })});
+  $('bi').value='';$('bl').value='';await reload();
+}
+
+async function delB(id){
+  if(confirm('删除？')){
+    await api({method:'POST',body:JSON.stringify({action:'banner_delete',id}));
+    await reload();
+  }
+}
+
+async function save(){
+  const action=editId?'platform_update':'platform_add';
+  await api({method:'POST',body:JSON.stringify({
+    action,id:editId,
+    data:{
+      name:$('name').value,
+      logo_url:$('logo').value,
+      description:$('desc').value,
+      link_url:$('link').value,
+      tag:$('tag').value,
+      sort:Number($('sort').value)||0
+    }
+  })});
+  editId=null;
+  ['name','logo','desc','link','tag'].forEach(x=>$(x).value='');
+  $('sort').value='0';
+  await reload();
+}
+
+async function edit(id){
+  const d=await api({method:'GET'});
+  const p=(d.platforms||[]).find(x=>x.id==id);
+  if(!p)return;
+  editId=id;
+  $('name').value=p.name||'';
+  $('logo').value=p.logo_url||'';
+  $('desc').value=p.description||'';
+  $('link').value=p.link_url||'';
+  $('tag').value=p.tag||'';
+  $('sort').value=p.sort||0;
+}
+
+async function delP(id){
+  if(confirm('删除？')){
+    await api({method:'POST',body:JSON.stringify({action:'platform_delete',id}));
+    await reload();
+  }
+}
+
+async function reload(){
+  render(await api({method:'GET'}));
+}
+</script>
+</body>
+</html>
