@@ -4,31 +4,20 @@ const $=x=>document.getElementById(x);
 
 async function api(o={}){
   o.headers={...(o.headers||{}),Authorization:'Bearer '+token,'Content-Type':'application/json'};
-  const r=await fetch('/api/admin',o);
+  const r=await fetch('/api/data',o);
   const d=await r.json();
   if(!r.ok) throw Error(d.error||'失败');
   return d;
 }
 
 async function login(){
-  token=$('pw').value;
-
-  // Safari/WebKit 会在 HTTP Header 中遇到非 ASCII 字符时直接抛出
-  // “The string did not match the expected pattern.”。
-  // 不把密码内容暴露出来，只在发送前做兼容性检查。
-  if(/[\\u0080-\\uFFFF]/.test(token)){
-    alert('当前后台接口把密码放在 Authorization 请求头中。Safari 不允许该请求头直接包含中文、Emoji 等非 ASCII 字符。请将后台密码设置为仅英文、数字和常见 ASCII 符号。');
-    return;
-  }
-
+  token=$('pw').value.trim();
   try{
     const d=await api();
     $('login').classList.add('hide');
     $('app').classList.remove('hide');
     render(d);
-  }catch(e){
-    alert(e && e.message ? e.message : '登录请求失败');
-  }
+  }catch(e){alert(e.message)}
 }
 
 async function reload(){render(await api())}
