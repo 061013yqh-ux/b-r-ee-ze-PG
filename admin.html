@@ -168,7 +168,7 @@ async function settings(){
 async function addBanner(){
   try{
     await api({method:'POST',body:JSON.stringify({action:'banner_add',data:{
-      image_url:$('bi').value,link_url:$('bl').value}}));
+      image_url:$('bi').value,link_url:$('bl').value}})});
     $('bi').value='';$('bl').value='';reload();
   }catch(e){alert(e.message)}
 }
