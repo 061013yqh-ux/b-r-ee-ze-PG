@@ -231,8 +231,9 @@ body{
 </main>
 
 <nav class="nav">
-    <a id="service" href="#"><span class="ico">◉</span>客服</a>
     <a class="active" href="/"><span class="ico">⌂</span>首页</a>
+    <a id="simulator" href="#"><span class="ico">🎮</span>PG模拟器</a>
+    <a href="/pg-tips.html"><span class="ico">📖</span>PG技巧</a>
     <a href="/admin.html"><span class="ico">⚙</span>管理</a>
 </nav>
 
@@ -254,7 +255,7 @@ const bannerDots=document.getElementById('bannerDots');
 const bannerViewport=document.getElementById('bannerViewport');
 const grid=document.getElementById('grid');
 const title=document.getElementById('title');
-const service=document.getElementById('service');
+const simulator=document.getElementById('simulator');
 
 function getBanners(list){
     return (Array.isArray(list)?list:[])
@@ -408,9 +409,7 @@ fetch('/api/data?_='+Date.now())
     document.title=d.settings?.title||'导航站';
     title.textContent=d.settings?.sectionTitle||'推荐导航';
 
-    if(d.settings?.service_url){
-        service.href=d.settings.service_url;
-    }
+    simulator.href=d.settings?.pg_simulator_url||'#';
 
     renderBanners(d.banners);
 

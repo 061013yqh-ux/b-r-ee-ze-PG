@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PG技巧</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fc;color:#17213a;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:720px;margin:auto;padding:14px 10px 90px}
+.head{background:#fff;border-radius:20px;padding:18px 18px 16px;box-shadow:0 4px 18px #0001;margin-bottom:14px}
+.head h1{margin:0;font-size:23px}
+.head p{margin:7px 0 0;color:#71809b;font-size:13px}
+.tip{background:#fff;border-radius:20px;padding:18px;margin-bottom:14px;box-shadow:0 4px 18px #0001;border:1px solid #edf0f5}
+.tip-title{font-size:21px;font-weight:800;margin:0 0 14px}
+.tip-content{font-size:15px;line-height:1.9;color:#3c4960;white-space:pre-wrap;overflow-wrap:anywhere}
+.empty{text-align:center;color:#8b95a8;padding:45px 20px;background:#fff;border-radius:20px;box-shadow:0 4px 18px #0001}
+.nav{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);width:min(680px,calc(100% - 20px));height:60px;background:#ffffffeF;border:1px solid #e5eaf2;border-radius:20px;display:flex;justify-content:space-around;align-items:center;box-shadow:0 6px 28px #0002}
+.nav a{text-decoration:none;color:#68758c;font-size:12px;text-align:center;min-width:70px}
+.nav .active{color:#1976ee;font-weight:700}
+.ico{display:block;font-size:21px}
+@media(max-width:430px){.tip{padding:16px}.tip-title{font-size:20px}.tip-content{font-size:14px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="head">
+    <h1 id="pageTitle">PG技巧</h1>
+    <p>实用技巧与内容</p>
+  </header>
+  <div id="tips"><div class="empty">加载中…</div></div>
+</main>
+<nav class="nav">
+  <a href="/"><span class="ico">⌂</span>首页</a>
+  <a id="simulator" href="#"><span class="ico">🎮</span>PG模拟器</a>
+  <a class="active" href="/pg-tips.html"><span class="ico">📖</span>PG技巧</a>
+  <a href="/admin.html"><span class="ico">⚙</span>管理</a>
+</nav>
+<script>
+const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+fetch('/api/data?_='+Date.now())
+.then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+.then(d=>{
+  document.title=d.settings?.tipsTitle||'PG技巧';
+  document.getElementById('pageTitle').textContent=d.settings?.tipsTitle||'PG技巧';
+  const sim=d.settings?.pg_simulator_url||'#';
+  document.getElementById('simulator').href=sim;
+  const tips=Array.isArray(d.tips)?d.tips:[];
+  document.getElementById('tips').innerHTML=tips.length
+    ?tips.map(t=>`<article class="tip"><h2 class="tip-title">${E(t.title)}</h2><div class="tip-content">${E(t.content)}</div></article>`).join('')
+    :'<div class="empty">暂无PG技巧内容</div>';
+})
+.catch(e=>{
+  console.error(e);
+  document.getElementById('tips').innerHTML='<div class="empty">加载失败</div>';
+});
+</script>
+</body>
+</html>

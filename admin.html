@@ -1,177 +1,221 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>后台</title><style>*{box-sizing:border-box}body{margin:0;background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17213a}.wrap{max-width:900px;margin:auto;padding:16px}.box{background:white;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 4px 18px #0001}h1,h2{margin-top:0}input,textarea,button{width:100%;padding:11px;border:1px solid #dce2ec;border-radius:10px;font:inherit}textarea{min-height:70px}label{display:block;margin:10px 0 5px;color:#68758c;font-size:13px}button{background:#1769e8;color:white;border:0;font-weight:700}.danger{background:#e74c3c}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{border:1px solid #e5e9f0;border-radius:12px;padding:10px;margin:8px 0}.item img{width:52px;height:52px;object-fit:cover;border-radius:10px;vertical-align:middle}.actions{display:flex;gap:8px;margin-top:8px}.actions button{width:auto;flex:1}.hide{display:none}@media(max-width:600px){.row{grid-template-columns:1fr}}</style></head><body><main class="wrap"><div id="login" class="box"><h1>后台管理</h1><label>管理密码</label><input id="pw" type="password"><button onclick="login()">登录</button></div><div id="app" class="hide"><div class="box"><h1>网站设置</h1><div class="row"><div><label>网站标题</label><input id="title"></div><div><label>栏目标题</label><input id="section"></div></div><label>客服链接</label><input id="service"><button style="margin-top:10px" onclick="settings()">保存设置</button></div><div class="box"><h2>Banner</h2><div id="banners"></div>
-<label>上传 Banner 图片</label>
-<input id="bf" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-<button style="margin-top:10px" onclick="uploadBannerImage()">上传图片到服务器</button>
-<div id="uploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
-<label>图片地址</label><input id="bi" placeholder="上传成功后自动填写">
-<label>跳转链接</label><input id="bl">
-<button style="margin-top:10px" onclick="addBanner()">新增 Banner</button></div><div class="box"><h2>导航卡片</h2><div id="list"></div><label>名称</label><input id="name"><label>Logo 图片地址</label><input id="logo" placeholder="上传后自动填写，也可以手动填写">
-<label>上传 Logo 图片</label>
-<input id="logoFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
-<button style="margin-top:10px" type="button" onclick="uploadLogoImage()">上传 Logo 到服务器</button>
-<div id="logoUploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
-<label>简介</label><textarea id="desc"></textarea><label>访问链接</label><input id="link"><div class="row"><div><label>标签</label><input id="tag" placeholder="官方/推荐"></div><div><label>排序</label><input id="sort" type="number" value="0"></div></div><button style="margin-top:10px" onclick="save()">新增卡片</button></div></div></main><script>
-let token='',editId=null;
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>后台</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fa;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#17213a}
+.wrap{max-width:900px;margin:auto;padding:16px}
+.box{background:white;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 4px 18px #0001}
+h1,h2{margin-top:0}
+input,textarea,button{width:100%;padding:11px;border:1px solid #dce2ec;border-radius:10px;font:inherit}
+textarea{min-height:100px;resize:vertical}
+label{display:block;margin:10px 0 5px;color:#68758c;font-size:13px}
+button{background:#1769e8;color:white;border:0;font-weight:700}
+.danger{background:#e74c3c}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.item{border:1px solid #e5e9f0;border-radius:12px;padding:10px;margin:8px 0}
+.item img{width:52px;height:52px;object-fit:cover;border-radius:10px;vertical-align:middle}
+.actions{display:flex;gap:8px;margin-top:8px}
+.actions button{width:auto;flex:1}
+.hide{display:none}
+.help{font-size:12px;color:#8a94a8;line-height:1.6;margin-top:6px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div id="login" class="box">
+  <h1>后台管理</h1>
+  <label>管理密码</label>
+  <input id="pw" type="password">
+  <button onclick="login()">登录</button>
+</div>
+
+<div id="app" class="hide">
+  <div class="box">
+    <h1>网站设置</h1>
+    <div class="row">
+      <div><label>网站标题</label><input id="title"></div>
+      <div><label>栏目标题</label><input id="section"></div>
+    </div>
+    <label>PG模拟器链接</label>
+    <input id="simulator" placeholder="点击底栏 PG模拟器 后直接打开的链接">
+    <div class="help">这里填写完整链接，例如 https://example.com/ 。以后只需要在这里修改，不用改前端代码。</div>
+    <label>PG技巧页面标题</label>
+    <input id="tipsTitle" placeholder="PG技巧">
+    <button style="margin-top:10px" onclick="settings()">保存设置</button>
+  </div>
+
+  <div class="box">
+    <h2>Banner</h2>
+    <div id="banners"></div>
+    <label>上传 Banner 图片</label>
+    <input id="bf" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+    <button style="margin-top:10px" onclick="uploadBannerImage()">上传图片到服务器</button>
+    <div id="uploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
+    <label>图片地址</label><input id="bi" placeholder="上传成功后自动填写">
+    <label>跳转链接</label><input id="bl">
+    <button style="margin-top:10px" onclick="addBanner()">新增 Banner</button>
+  </div>
+
+  <div class="box">
+    <h2>导航卡片</h2>
+    <div id="list"></div>
+    <label>名称</label><input id="name">
+    <label>Logo 图片地址</label><input id="logo" placeholder="上传后自动填写，也可以手动填写">
+    <label>上传 Logo 图片</label>
+    <input id="logoFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+    <button style="margin-top:10px" type="button" onclick="uploadLogoImage()">上传 Logo 到服务器</button>
+    <div id="logoUploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
+    <label>简介</label><textarea id="desc"></textarea>
+    <label>访问链接</label><input id="link">
+    <div class="row"><div><label>标签</label><input id="tag" placeholder="官方/推荐"></div><div><label>排序</label><input id="sort" type="number" value="0"></div></div>
+    <button style="margin-top:10px" onclick="save()">新增/保存卡片</button>
+  </div>
+
+  <div class="box">
+    <h2>PG技巧</h2>
+    <div class="help">这里新增的内容会直接显示在前端 PG技巧 页面。正文支持换行，内容多少会自动撑开卡片高度。</div>
+    <div id="tipsList"></div>
+    <label>标题</label><input id="tipTitle" placeholder="例如：PG技巧1">
+    <label>正文内容</label><textarea id="tipContent" placeholder="输入PG技巧正文，可直接换行。"></textarea>
+    <label>排序</label><input id="tipSort" type="number" value="0">
+    <button style="margin-top:10px" onclick="saveTip()">新增/保存PG技巧</button>
+  </div>
+</div>
+</main>
+
+<script>
+let token='',editId=null,tipEditId=null;
 const $=x=>document.getElementById(x);
 
 async function uploadBannerImage(){
   const f=$('bf').files[0];
   if(!f){alert('请先选择图片');return}
-  const status=$('uploadStatus');
-  status.textContent='上传中…';
-  const fd=new FormData();
-  fd.append('file',f);
+  const status=$('uploadStatus'); status.textContent='上传中…';
+  const fd=new FormData(); fd.append('file',f);
   try{
     const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
     const d=await r.json();
     if(!r.ok||!d.success) throw Error(d.message||'上传失败');
-    $('bi').value=d.url || ('http://154.201.87.141/images/'+(d.filename||''));
+    $('bi').value=d.url||('/images/'+(d.filename||''));
     status.textContent='上传成功';
-  }catch(e){
-    status.textContent='上传失败：'+(e.message||e);
-    alert('图片上传失败：'+(e.message||e));
-  }
+  }catch(e){status.textContent='上传失败：'+(e.message||e);alert('图片上传失败：'+(e.message||e))}
 }
 
 async function uploadLogoImage(){
   const f=$('logoFile').files[0];
   if(!f){alert('请先选择 Logo 图片');return}
-  const status=$('logoUploadStatus');
-  status.textContent='上传中…';
-  const fd=new FormData();
-  fd.append('file',f);
+  const status=$('logoUploadStatus'); status.textContent='上传中…';
+  const fd=new FormData(); fd.append('file',f);
   try{
     const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
     const d=await r.json();
     if(!r.ok||!d.success) throw Error(d.message||'上传失败');
-    $('logo').value=d.url || ('https://img.youyouyh.xyz/images/'+(d.filename||''));
+    $('logo').value=d.url||('/images/'+(d.filename||''));
     status.textContent='上传成功';
-  }catch(e){
-    status.textContent='上传失败：'+(e.message||e);
-    alert('Logo 图片上传失败：'+(e.message||e));
-  }
+  }catch(e){status.textContent='上传失败：'+(e.message||e);alert('Logo 图片上传失败：'+(e.message||e))}
 }
 
 async function api(o={}){
   o.headers={...(o.headers||{}),Authorization:'Bearer '+token,'Content-Type':'application/json'};
-  const r=await fetch('/api/data',o);
-  const d=await r.json();
-  if(!r.ok) throw Error(d.error||'失败');
-  return d;
+  const r=await fetch('/api/data',o); const d=await r.json();
+  if(!r.ok)throw Error(d.error||'失败'); return d;
 }
-
 async function login(){
   token=$('pw').value.trim();
-  try{
-    const d=await api();
-    $('login').classList.add('hide');
-    $('app').classList.remove('hide');
-    render(d);
-  }catch(e){alert(e.message)}
+  try{const d=await api();$('login').classList.add('hide');$('app').classList.remove('hide');render(d)}
+  catch(e){alert(e.message)}
 }
-
 async function reload(){render(await api())}
 
 function render(d){
   $('title').value=d.settings.title||'';
   $('section').value=d.settings.sectionTitle||'';
-  $('service').value=d.settings.service_url||'';
-  $('banners').innerHTML=d.banners.map(b=>
-    '<div class="item"><img src="'+b.image_url+'"> '+b.link_url+
-    ' <button class="danger" onclick="delB('+b.id+')">删除</button></div>'
-  ).join('');
-  $('list').innerHTML=d.platforms.map(p=>
-    '<div class="item"><img src="'+(p.logo_url||'')+'"> <b>'+p.name+'</b><div>'+
-    p.link_url+'</div><div class="actions"><button onclick="edit('+p.id+')">编辑</button>'+
-    '<button class="danger" onclick="delP('+p.id+')">删除</button></div></div>'
-  ).join('');
+  $('simulator').value=d.settings.pg_simulator_url||'';
+  $('tipsTitle').value=d.settings.tipsTitle||'PG技巧';
+
+  $('banners').innerHTML=(d.banners||[]).map(b=>
+    '<div class="item"><img src="'+esc(b.image_url)+'"> '+esc(b.link_url)+
+    ' <button class="danger" onclick="delB('+b.id+')">删除</button></div>').join('');
+
+  $('list').innerHTML=(d.platforms||[]).map(p=>
+    '<div class="item"><img src="'+esc(p.logo_url||'')+'"> <b>'+esc(p.name)+'</b><div>'+esc(p.link_url)+
+    '</div><div class="actions"><button onclick="edit('+p.id+')">编辑</button>'+
+    '<button class="danger" onclick="delP('+p.id+')">删除</button></div></div>').join('');
+
+  $('tipsList').innerHTML=(d.tips||[]).map(t=>
+    '<div class="item"><b>'+esc(t.title)+'</b><div style="white-space:pre-wrap;margin-top:6px;color:#68758c">'+esc(t.content)+'</div>'+
+    '<div class="actions"><button onclick="editTip('+t.id+')">编辑</button>'+
+    '<button class="danger" onclick="delTip('+t.id+')">删除</button></div></div>').join('');
 }
+
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 
 async function settings(){
   try{
-    await api({
-      method:'POST',
-      body:JSON.stringify({
-        action:'settings',
-        data:{
-          title:$('title').value,
-          sectionTitle:$('section').value,
-          service_url:$('service').value
-        }
-      })
-    });
+    await api({method:'POST',body:JSON.stringify({action:'settings',data:{
+      title:$('title').value,sectionTitle:$('section').value,
+      pg_simulator_url:$('simulator').value,tipsTitle:$('tipsTitle').value
+    }})});
     alert('已保存');
   }catch(e){alert(e.message)}
 }
 
 async function addBanner(){
   try{
-    await api({
-      method:'POST',
-      body:JSON.stringify({
-        action:'banner_add',
-        data:{
-          image_url:$('bi').value,
-          link_url:$('bl').value
-        }
-      })
-    });
-    $('bi').value='';
-    $('bl').value='';
-    reload();
+    await api({method:'POST',body:JSON.stringify({action:'banner_add',data:{
+      image_url:$('bi').value,link_url:$('bl').value}}));
+    $('bi').value='';$('bl').value='';reload();
   }catch(e){alert(e.message)}
 }
-
 async function delB(id){
-  if(confirm('删除？')){
-    try{
-      await api({method:'POST',body:JSON.stringify({action:'banner_delete',id:id})});
-      reload();
-    }catch(e){alert(e.message)}
-  }
+  if(confirm('删除？'))try{await api({method:'POST',body:JSON.stringify({action:'banner_delete',id})});reload()}catch(e){alert(e.message)}
 }
-
 async function save(){
   try{
     const action=editId?'platform_update':'platform_add';
-    const data={
-      name:$('name').value,
-      logo_url:$('logo').value,
-      description:$('desc').value,
-      link_url:$('link').value,
-      tag:$('tag').value,
-      sort:Number($('sort').value)
-    };
-    await api({method:'POST',body:JSON.stringify({action:action,id:editId,data:data})});
-    editId=null;
-    ['name','logo','desc','link','tag'].forEach(x=>$(x).value='');
-    $('logoFile').value='';
-    $('logoUploadStatus').textContent='';
+    const data={name:$('name').value,logo_url:$('logo').value,description:$('desc').value,
+      link_url:$('link').value,tag:$('tag').value,sort:Number($('sort').value)};
+    await api({method:'POST',body:JSON.stringify({action,id:editId,data})});
+    editId=null;['name','logo','desc','link','tag'].forEach(x=>$(x).value='');
+    $('logoFile').value='';$('logoUploadStatus').textContent='';reload();
+  }catch(e){alert(e.message)}
+}
+async function edit(id){
+  try{
+    const d=await api(),p=d.platforms.find(x=>x.id==id);if(!p)return;
+    editId=id;$('name').value=p.name;$('logo').value=p.logo_url||'';$('desc').value=p.description||'';
+    $('link').value=p.link_url;$('tag').value=p.tag||'';$('sort').value=p.sort||0;
+  }catch(e){alert(e.message)}
+}
+async function delP(id){
+  if(confirm('删除？'))try{await api({method:'POST',body:JSON.stringify({action:'platform_delete',id})});reload()}catch(e){alert(e.message)}
+}
+async function saveTip(){
+  try{
+    const action=tipEditId?'tip_update':'tip_add';
+    const data={title:$('tipTitle').value.trim(),content:$('tipContent').value,sort:Number($('tipSort').value)||0};
+    if(!data.title){alert('请填写标题');return}
+    if(!data.content.trim()){alert('请填写正文');return}
+    await api({method:'POST',body:JSON.stringify({action,id:tipEditId,data})});
+    tipEditId=null;$('tipTitle').value='';$('tipContent').value='';$('tipSort').value=0;
     reload();
   }catch(e){alert(e.message)}
 }
-
-async function edit(id){
+async function editTip(id){
   try{
-    const d=await api();
-    const p=d.platforms.find(x=>x.id==id);
-    if(!p)return;
-    editId=id;
-    $('name').value=p.name;
-    $('logo').value=p.logo_url||'';
-    $('desc').value=p.description||'';
-    $('link').value=p.link_url;
-    $('tag').value=p.tag||'';
-    $('sort').value=p.sort||0;
+    const d=await api(),t=(d.tips||[]).find(x=>x.id==id);if(!t)return;
+    tipEditId=id;$('tipTitle').value=t.title;$('tipContent').value=t.content;$('tipSort').value=t.sort||0;
+    window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
   }catch(e){alert(e.message)}
 }
-
-async function delP(id){
-  if(confirm('删除？')){
-    try{
-      await api({method:'POST',body:JSON.stringify({action:'platform_delete',id:id})});
-      reload();
-    }catch(e){alert(e.message)}
-  }
+async function delTip(id){
+  if(confirm('删除这条PG技巧？'))try{await api({method:'POST',body:JSON.stringify({action:'tip_delete',id})});reload()}catch(e){alert(e.message)}
 }
-</script></body></html>
+</script>
+</body>
+</html>
