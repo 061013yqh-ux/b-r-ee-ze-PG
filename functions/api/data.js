@@ -33,6 +33,7 @@ async function all(env){
 }
 export async function onRequestGet({request,env}){
   try{
+    if(!authorized(request,env))return authError(env);
     await init(env);
     return j(await all(env))
   }catch(e){
