@@ -98,7 +98,7 @@ async function uploadBannerImage(){
   const status=$('uploadStatus'); status.textContent='上传中…';
   const fd=new FormData(); fd.append('file',f);
   try{
-    const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
+    const r=await fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
     const d=await r.json();
     if(!r.ok||!d.success) throw Error(d.message||'上传失败');
     $('bi').value=d.url||('/images/'+(d.filename||''));
@@ -112,7 +112,7 @@ async function uploadLogoImage(){
   const status=$('logoUploadStatus'); status.textContent='上传中…';
   const fd=new FormData(); fd.append('file',f);
   try{
-    const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
+    const r=await fetch('/api/upload',{method:'POST',headers:{Authorization:'Bearer '+token},body:fd});
     const d=await r.json();
     if(!r.ok||!d.success) throw Error(d.message||'上传失败');
     $('logo').value=d.url||('/images/'+(d.filename||''));
