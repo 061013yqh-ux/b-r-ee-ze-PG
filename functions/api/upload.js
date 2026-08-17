@@ -27,7 +27,10 @@ export async function onRequestPost(context) {
       data = JSON.parse(text);
     } catch {
       return Response.json(
-        { success: false, message: "图片服务器返回了无效响应" },
+        {
+          success: false,
+          message: `图片服务器返回了无效响应（HTTP ${r.status}）：${text.slice(0, 300)}`
+        },
         { status: 502 }
       );
     }
@@ -37,6 +40,7 @@ export async function onRequestPost(context) {
         /^https?:\/\/154\.201\.87\.141/,
         ""
       );
+
       if (!data.url.startsWith("/")) {
         data.url = "/" + data.url;
       }
@@ -49,7 +53,10 @@ export async function onRequestPost(context) {
     return Response.json(data, { status: r.status });
   } catch (e) {
     return Response.json(
-      { success: false, message: String(e?.message || e) },
+      {
+        success: false,
+        message: `连接图片服务器失败：${String(e?.message || e)}`
+      },
       { status: 502 }
     );
   }
