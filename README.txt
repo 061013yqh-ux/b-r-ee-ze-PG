@@ -1,9 +1,13 @@
-全新独立导航站 v1
-1. 创建新的 Cloudflare Pages 项目并连接此仓库。
-2. 创建新的 D1 数据库。
-3. Pages -> Settings -> Functions -> D1 bindings，Variable name 填 DB。
-4. 添加环境变量 ADMIN_PASSWORD，设置后台密码。
-5. 首次访问会自动创建 D1 表。
-6. 前台：/
-7. 后台：/admin.html
-8. 第一版图片使用图片 URL；后续可以再接 R2，实现后台直接上传图片。
+部署说明
+
+1. 把 functions/ 文件夹放进 Cloudflare Pages 项目的仓库根目录。
+2. 把 admin.html 替换项目原来的后台 HTML（如果你现在的后台文件名不同，就只取里面的上传地址修改）。
+3. 提交并推送到 GitHub，让 Cloudflare Pages 自动重新部署。
+4. 部署完成后，后台上传接口会变成：
+   https://breezepg.pages.dev/api/upload
+5. 图片访问会变成：
+   https://breezepg.pages.dev/images/文件名
+
+注意：
+- 图片服务器仍然是 http://154.201.87.141，不需要现在改它。
+- 浏览器只访问 HTTPS 的 breezepg.pages.dev，Cloudflare Pages Function 再从服务器取数据。
