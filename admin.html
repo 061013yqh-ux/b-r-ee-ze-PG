@@ -17,10 +17,10 @@ async function uploadBannerImage(){
   const fd=new FormData();
   fd.append('file',f);
   try{
-    const r=await fetch('http://img.youyouyh.xyz/upload',{method:'POST',body:fd});
+    const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
     const d=await r.json();
     if(!r.ok||!d.success) throw Error(d.message||'上传失败');
-    $('bi').value=d.url || ('http://img.youyouyh.xyz/images/'+(d.filename||''));
+    $('bi').value=d.url || ('http://154.201.87.141/images/'+(d.filename||''));
     status.textContent='上传成功';
   }catch(e){
     status.textContent='上传失败：'+(e.message||e);
