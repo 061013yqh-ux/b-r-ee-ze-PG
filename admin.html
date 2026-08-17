@@ -5,7 +5,12 @@
 <div id="uploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
 <label>图片地址</label><input id="bi" placeholder="上传成功后自动填写">
 <label>跳转链接</label><input id="bl">
-<button style="margin-top:10px" onclick="addBanner()">新增 Banner</button></div><div class="box"><h2>导航卡片</h2><div id="list"></div><label>名称</label><input id="name"><label>Logo 图片地址</label><input id="logo"><label>简介</label><textarea id="desc"></textarea><label>访问链接</label><input id="link"><div class="row"><div><label>标签</label><input id="tag" placeholder="官方/推荐"></div><div><label>排序</label><input id="sort" type="number" value="0"></div></div><button style="margin-top:10px" onclick="save()">新增卡片</button></div></div></main><script>
+<button style="margin-top:10px" onclick="addBanner()">新增 Banner</button></div><div class="box"><h2>导航卡片</h2><div id="list"></div><label>名称</label><input id="name"><label>Logo 图片地址</label><input id="logo" placeholder="上传后自动填写，也可以手动填写">
+<label>上传 Logo 图片</label>
+<input id="logoFile" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+<button style="margin-top:10px" type="button" onclick="uploadLogoImage()">上传 Logo 到服务器</button>
+<div id="logoUploadStatus" style="margin-top:8px;color:#68758c;font-size:13px"></div>
+<label>简介</label><textarea id="desc"></textarea><label>访问链接</label><input id="link"><div class="row"><div><label>标签</label><input id="tag" placeholder="官方/推荐"></div><div><label>排序</label><input id="sort" type="number" value="0"></div></div><button style="margin-top:10px" onclick="save()">新增卡片</button></div></div></main><script>
 let token='',editId=null;
 const $=x=>document.getElementById(x);
 
@@ -25,6 +30,25 @@ async function uploadBannerImage(){
   }catch(e){
     status.textContent='上传失败：'+(e.message||e);
     alert('图片上传失败：'+(e.message||e));
+  }
+}
+
+async function uploadLogoImage(){
+  const f=$('logoFile').files[0];
+  if(!f){alert('请先选择 Logo 图片');return}
+  const status=$('logoUploadStatus');
+  status.textContent='上传中…';
+  const fd=new FormData();
+  fd.append('file',f);
+  try{
+    const r=await fetch('https://img.youyouyh.xyz/upload',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!r.ok||!d.success) throw Error(d.message||'上传失败');
+    $('logo').value=d.url || ('https://img.youyouyh.xyz/images/'+(d.filename||''));
+    status.textContent='上传成功';
+  }catch(e){
+    status.textContent='上传失败：'+(e.message||e);
+    alert('Logo 图片上传失败：'+(e.message||e));
   }
 }
 
@@ -121,6 +145,8 @@ async function save(){
     await api({method:'POST',body:JSON.stringify({action:action,id:editId,data:data})});
     editId=null;
     ['name','logo','desc','link','tag'].forEach(x=>$(x).value='');
+    $('logoFile').value='';
+    $('logoUploadStatus').textContent='';
     reload();
   }catch(e){alert(e.message)}
 }
