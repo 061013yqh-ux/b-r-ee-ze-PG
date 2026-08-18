@@ -39,9 +39,10 @@ export async function onRequestPost(context) {
     catch { return json({success:false,message:`图片服务器返回了无效响应（HTTP ${r.status}）`},502); }
 
     if (data && typeof data.url === "string") {
-      data.url = data.url.replace(/^https?:\/\/154\.201\.87\.141/, "");
-      if (!data.url.startsWith("/")) data.url = "/" + data.url;
-    }
+  if (!/^https?:\/\//i.test(data.url)) {
+    data.url = "/" + data.url.replace(/^\/+/, "");
+  }
+}
     if (data && typeof data.filename === "string" && !data.url) {
       data.url = "/images/" + encodeURIComponent(data.filename);
     }
