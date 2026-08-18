@@ -16,7 +16,7 @@ export async function onRequestPost(context) {
   if(!env.ADMIN_PASSWORD) return json({success:false,message:"Cloudflare 未配置 ADMIN_PASSWORD"},500);
   if(!authorized(request, env)) return json({success:false,message:"未授权"},401);
 
-  const upstream = "http://154.201.87.141/upload";
+  const upstream = "https://img.youyouyh.xyz/upload";
 
   try {
     const form = await request.formData();
