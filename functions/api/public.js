@@ -3,7 +3,6 @@ function j(x,s=200){
 }
 export async function onRequestGet({env}){
   try{
-    await init(env);
     const [s,b,p,t]=await Promise.all([
       env.DB.prepare("SELECT key,value FROM settings WHERE key IN ('title','sectionTitle','pg_simulator_url','tipsTitle')").all(),
       env.DB.prepare("SELECT id,image_url,link_url,sort FROM banners ORDER BY sort,id DESC").all(),
