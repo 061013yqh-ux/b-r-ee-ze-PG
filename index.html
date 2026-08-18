@@ -400,7 +400,7 @@ bannerViewport.addEventListener('mouseleave',()=>{
     if(banners.length>1 && !bannerDragging)startBanner();
 });
 
-fetch('/api/public?_='+Date.now())
+fetch('/api/public')
 .then(r=>{
     if(!r.ok)throw new Error('HTTP '+r.status);
     return r.json();
