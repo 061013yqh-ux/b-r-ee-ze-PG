@@ -1,10 +1,3 @@
-async function init(env){
-  if(!env.DB)throw new Error("D1 binding DB 未配置");
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)").run();
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS banners(id INTEGER PRIMARY KEY AUTOINCREMENT,image_url TEXT NOT NULL,link_url TEXT NOT NULL,sort INTEGER DEFAULT 0)").run();
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS platforms(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,logo_url TEXT,description TEXT,link_url TEXT NOT NULL,tag TEXT,sort INTEGER DEFAULT 0)").run();
-  await env.DB.prepare("CREATE TABLE IF NOT EXISTS tips(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,content TEXT NOT NULL,sort INTEGER DEFAULT 0)").run();
-}
 function j(x,s=200){
   return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json;charset=utf-8","cache-control":"public, max-age=30"}});
 }
