@@ -1,5 +1,5 @@
 function j(x,s=200){
-  return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json;charset=utf-8","cache-control":"public, max-age=30"}});
+  return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json;charset=utf-8","cache-control":"public, max-age=30, s-maxage=60, stale-while-revalidate=300"}});
 }
 export async function onRequestGet({env}){
   try{
